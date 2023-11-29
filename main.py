@@ -1,5 +1,6 @@
 import json
 import re
+import os
 
 import numpy as np
 import pandas as pd
@@ -8,8 +9,27 @@ import torch.nn.functional as F
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoModel, AutoTokenizer
 
+
+def check_vectorizer_files(dirs=['./tokenizer/', './vectorizer/']):
+
+    if not os.path.exists(dirs[0]):
+        os.makedirs(dirs[0])
+        tokenizer = AutoTokenizer.from_pretrained('intfloat/multilingual-e5-large')
+        tokenizer.save_pretrained(dirs[0])
+        
+        
+    if not os.path.exists(dirs[1]):
+        os.makedirs(dirs[1])
+        vectorizer = AutoModel.from_pretrained('intfloat/multilingual-e5-large')
+        vectorizer.save_pretrained(dirs[1])
+
+
+check_vectorizer_files()
+
+
 tokenizer = AutoTokenizer.from_pretrained('./tokenizer')
 vectorizer = AutoModel.from_pretrained('./vectorizer')
+
 
 
 class NumpyEncoder(json.JSONEncoder):
