@@ -134,11 +134,15 @@ class DistanceRecommender():
         )
         self.vectorizer.fit(preprocessed_corpus)
         self.product_matrix = self.vectorizer.transform(preprocessed_corpus)
-        self.product_index_to_id = {i: product_corpus.loc[i, id_column] for i in range(len(product_corpus))}
+        self.product_index_to_id = {str(i): product_corpus.loc[i, id_column] for i in range(len(product_corpus))}
         if save_to_dir:
-            np.save('product_matrix.npy', self.product_matrix)
+            
+            if not os.path.exists('./model_files'):
+                os.makedirs('./model_files')
+            
+            np.save('./model_files/product_matrix.npy', self.product_matrix)
 
-            with open('product_index_to_id.json', 'w') as file:
+            with open('./model_files/product_index_to_id.json', 'w') as file:
                 json.dump(self.product_index_to_id, file, cls=NumpyEncoder)
 
     def from_pretrained(
@@ -189,4 +193,21 @@ def dealerprice_table(table_path='marketing_dealerprice.csv',
             dealer_id_column
         ]
     )
+    return table_csv
+
+def prossept_products_table(table_path='marketing_product.csv',
+                            product_names_column = 'name',
+                            read_params={'on_bad_lines': "skip",
+                                           'encoding': 'utf-8',
+                                           'sep': ';'}
+                             ):
+    '''
+    Функция принимает путь к csv файлу, содержащему актуальную информацию по товарам заказчика.
+    Дополнительно указывается название колонки с внутренними неймингами для удаления плохих строк.
+    '''
+    
+    table_csv = pd.read_csv(table_path, **read_params) 
+    table_csv = table_csv.dropna(subset='name')
+    table_csv = table_csv.reset_index(drop=True)
+    
     return table_csv
