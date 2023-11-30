@@ -9,7 +9,6 @@ import torch.nn.functional as F
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoModel, AutoTokenizer
 
-
 def check_vectorizer_files(dirs=['./tokenizer/', './vectorizer/']):
 
     if not os.path.exists(dirs[0]):
@@ -22,14 +21,6 @@ def check_vectorizer_files(dirs=['./tokenizer/', './vectorizer/']):
         os.makedirs(dirs[1])
         vectorizer = AutoModel.from_pretrained('intfloat/multilingual-e5-large')
         vectorizer.save_pretrained(dirs[1])
-
-
-check_vectorizer_files()
-
-
-tokenizer = AutoTokenizer.from_pretrained('./tokenizer')
-vectorizer = AutoModel.from_pretrained('./vectorizer')
-
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -92,11 +83,13 @@ def string_filter_emb(string):
 
 class InfloatVectorizer():
     def __init__(self,
-                 tokenizer=tokenizer,
-                 vectorizer=vectorizer):
+                 toc_path='./tokenizer/',
+                 vec_path='./vectorizer/'):
+        
+        check_vectorizer_files(dirs=[toc_path, vec_path])
 
-        self.tokenizer = tokenizer
-        self.model = vectorizer
+        self.tokenizer = AutoTokenizer.from_pretrained(toc_path)
+        self.model = AutoModel.from_pretrained(vec_path)
 
     def fit(self, X=None):
         pass
@@ -160,10 +153,12 @@ class DistanceRecommender():
 
     def recommend(self,
                   dealer_corpus: list[dict]):
-        preprocessed_corpus = dealer_corpus.apply(
+        dealer_corpus = pd.Series(dealer_corpus)
+
+        dealer_corpus = dealer_corpus.apply(
             self.preprocessing
         ).values.tolist()
-        vectors = self.vectorizer.transform(preprocessed_corpus)
+        vectors = self.vectorizer.transform(dealer_corpus)
         sims = self.simularity_counter(vectors, self.product_matrix)
 
         result = []
@@ -195,26 +190,3 @@ def dealerprice_table(table_path='marketing_dealerprice.csv',
         ]
     )
     return table_csv
-
-
-model = DistanceRecommender(
-    vectorizer=InfloatVectorizer(
-        tokenizer=tokenizer,
-        vectorizer=vectorizer
-    ),
-    simularity_func=cosine_similarity,
-    text_prep_func=string_filter_emb
-)
-
-model.from_pretrained()
-
-
-names = ['Герметик акриловый  цвет белый , ф/п 600 мл. (12 штук )',
-         'Гель эконом-класса для мытья  посуды вручную. С ароматом яблокаCooky Apple Eконцентрированное средство / 5 л ПЭТ',
-         'Средство для удаления ржавчины и минеральных отложений щадящего действияBath Acid  концентрат 1:200-1:500 / 0,75 л ',
-         'Антисептик многофункциональный ФБС, ГОСТ / 5 л',
-         'Гелеобразное средство усиленного действия для удаления ржавчины и минеральных отложенийBath Extraконцентрат 1:10-1:100 / 0,75 л']
-
-names = pd.Series(names)
-
-print(model.recommend(names))

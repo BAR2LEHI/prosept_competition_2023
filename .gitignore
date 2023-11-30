@@ -1,2 +1,6 @@
 .venv
 venv
+.tokenizer
+.vectorizer
+tokenizer
+vectorizer
