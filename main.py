@@ -30,54 +30,80 @@ class NumpyEncoder(json.JSONEncoder):
         return super(NumpyEncoder, self).default(obj)
 
 
-def replace_values_l(value):
-    if ' л' in value:
-        value = value.replace(' л', '000 мл')
-        value = value.replace('.0', '')
-        return value
-    elif 'л' in value:
-        pattern = r'(\d+(?:\.\d+)?)\s*л\b'
-        matches = re.findall(pattern, value, flags=re.IGNORECASE)
-        for match in matches:
-            replacement = f"{float(match) * 1000:.0f} мл"
-            value = re.sub(
-                fr'({match})\s*л\b',
-                replacement,
-                value,
-                flags=re.IGNORECASE
-            )
-        return value
-    else:
-        return value
+def remove_dots_except_between_numbers(string):
+    new_string = ''
+    for i, char in enumerate(string):
+        if char in [',', '.']:
+            if (string[i-1].isdigit() and
+                i + 1 < len(string) and
+                string[i+1].isdigit()):
+                new_string += char
+            else:
+                new_string += ' '
+                pass
+
+        else:
+            new_string += char
+        previous_char = char
+
+    return new_string
 
 
-def replace_values_kg(value):
-    if ' кг' in value:
-        value = value.replace(' кг', '000 г')
-        value = value.replace('.0', '')
-        return value
-    elif 'кг' in value:
-        pattern = r'(\d+(?:\.\d+)?)\s*кг\b'
-        matches = re.findall(pattern, value, flags=re.IGNORECASE)
-        for match in matches:
-            replacement = f"{float(match) * 1000:.0f} г"
-            value = re.sub(
-                fr'({match})\s*кг\b',
-                replacement,
-                value,
-                flags=re.IGNORECASE
-            )
-        return value
-    else:
-        return value
+def replace_values(string):
+    res = []
+    
+    string = remove_dots_except_between_numbers(string)
+    
+    splitted = string.split()
+    
+    for i, t in enumerate(splitted):
+        if 'л' in t:
+            value = t.replace('л', '')
+            if value.replace(',', '.').replace('.', '').isdigit():
+                value = float(value.replace(',', '.')) * 1000
+                t = f'{int(value)} мл'
+                res += [t]
+                continue
+
+            elif splitted[i - 1].replace(',', '.').replace('.', '').isdigit() and not 'мл' in t:
+                value = float(splitted[i - 1].replace(',', '.')) * 1000
+                t = f'{int(value)} мл'
+                res = res[:-1]
+                res += [t]
+                continue
+            else:
+                pass
+        if 'кг' in t:
+            value = t.replace('кг', '')
+            if value.replace(',', '.').replace('.', '').isdigit():
+                value = float(value.replace(',', '.')) * 1000
+                t = f'{int(value)} г'
+                res += [t]
+                continue
+
+            elif splitted[i - 1].replace(',', '.').replace('.', '').isdigit():
+                value = float(splitted[i - 1].replace(',', '.')) * 1000
+                t = f'{int(value)} г'
+                res = res[:-1]
+                res += [t]
+                continue
+            else:
+                pass
+        
+        res += [t]
+    return ' '.join(res)
 
 
 def string_filter_emb(string):
-    string = string.lower()
-    string = replace_values_kg(replace_values_l(string))
+    
+    string = string.lower() 
+    string = replace_values(string)
     string = re.sub(r'[^a-zo0-9а-я\s:]', ' ', string)
     string = re.sub(r'(?<=[а-я])(?=[a-z])|(?<=[a-z])(?=[а-я])', ' ', string)
     string = re.sub(r'(?<=[а-яa-z])(?=\d)|(?<=\d)(?=[а-яa-z])', ' ', string)
+    
+    string = string.replace(' 0 ', ' ')
+    string = ' '.join([w for w in string.split()])
     return string
 
 
@@ -117,7 +143,7 @@ class DistanceRecommender():
     def __init__(self,
                  vectorizer,
                  simularity_func,
-                 text_prep_func):
+                 text_prep_func=string_filter_emb):
         self.vectorizer = vectorizer
         self.simularity_counter = simularity_func
         self.preprocessing = text_prep_func
