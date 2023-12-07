@@ -12,7 +12,8 @@ origins = [
     "http://proseptmatching.zapto.org:8001",
     "http://proseptmatching.zapto.org:8000",
     "http://proseptmatching.zapto.org:5173",
-    "http://proseptmatching.zapto.org"
+    "http://proseptmatching.zapto.org",
+    "http://ds_ml.:8001"
 ]
 
 app = FastAPI()
