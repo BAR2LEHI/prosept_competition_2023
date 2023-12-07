@@ -12,7 +12,7 @@ origins = [
     "http://proseptmatching.zapto.org:8001",
     "http://proseptmatching.zapto.org:5173",
     "http://proseptmatching.zapto.org",
-    "http://app:8001",
+    "http://app:8000",
     "http://app"
 ]
 
