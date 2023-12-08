@@ -97,6 +97,9 @@ def replace_values(string):
 def string_filter_emb(string):
     
     string = string.lower() 
+    string = re.sub(r'\d+-\d+', '', string)
+    string = re.sub(r'\d+::\d+', '', string)
+    string = re.sub(r'\d+:\d+', '', string)
     string = replace_values(string)
     string = re.sub(r'[^a-zo0-9а-я\s:]', ' ', string)
     string = re.sub(r'(?<=[а-я])(?=[a-z])|(?<=[a-z])(?=[а-я])', ' ', string)
@@ -237,3 +240,11 @@ def prossept_products_table(table_path='marketing_product.csv',
     table_csv = table_csv.reset_index(drop=True)
     
     return table_csv
+
+def names_join_ozon(x):
+    total = []
+    if type(x['name']) == str:
+        total += [x['name'].strip()]
+    if type(x['ozon_name']) == str:
+        total += [x['ozon_name'].strip()]
+    return ' '.join(total)

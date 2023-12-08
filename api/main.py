@@ -7,14 +7,9 @@ from .model import model_job
 
 
 origins = [
-    "http://proseptmatching.zapto.org:3000",
-    "http://proseptmatching.zapto.org:8080",
-    "http://proseptmatching.zapto.org:8001",
-    "http://proseptmatching.zapto.org:5173",
-    "http://proseptmatching.zapto.org",
-    "http://app:8000",
-    "http://app"
+    '*'
 ]
+
 
 app = FastAPI()
 
